@@ -7,7 +7,7 @@ PlanKey, arka planda çalışan ve sistem genelinde `F8` tuşunu dinleyen yerel 
 - **Sınav Çalışma Takvimi:** Seçilen metne göre gün/saat bazlı çalışma programı.
 - **Pomodoro Planı:** 25dk odak / 5dk mola döngülerine dayalı saatlik görev listesi.
 - **Konu Analizi:** İçeriği önem sırasına göre ayırıp strateji oluşturma.
-- **Tamamen Yerel:** API servisine ihtiyaç duymaz.
+
 
 ## Akış
 

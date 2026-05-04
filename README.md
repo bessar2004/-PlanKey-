@@ -1,95 +1,77 @@
-# ⚡ PlanKey: Akıllı Çalışma Asistanı
+# ⚡ PlanKey: Senin Kişisel Yapay Zeka Çalışma Asistanın!
+
+Selam! 👋 Ders çalışırken plan yapmak, konuları bölmek ve neye ne kadar süre ayıracağını düşünmek seni de yoruyor mu? İşte **PlanKey** tam da bunun için var! 
+
+Sen ders notunu, sınav konularını veya herhangi bir metni okurken **sadece metni seçip F8 tuşuna basarsın**, PlanKey anında devreye girer ve o metni senin için analiz edip harika bir çalışma planına dönüştürür. Üstelik her şeyi arka planda, seni hiç rahatsız etmeden yapar.
 
 <div align="center">
 
+![PlanKey Ekran Görüntüsü](./screenshot.png) 
+*(Eğer elindeki o harika fotoğrafı `screenshot.png` adıyla bu klasöre kaydedersen, burası çok daha havalı görünecek!)*
+
 ![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-white?style=for-the-badge&logo=ollama&logoColor=black)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
-![UI](https://img.shields.io/badge/UI-Tkinter-blue?style=for-the-badge)
-
-**Local AI + Akıllı Planlama = Maksimum Verim**
-
-*PlanKey, arka planda sessizce çalışan ve ders çalışma sürecinizi yapay zeka ile optimize eden modern bir öğrenci asistanıdır.*
 
 </div>
 
 ---
 
-## 🚀 Hızlı Başlangıç (Tek Tıkla!)
+## 🚀 Nasıl Kullanılır? (Çok Basit!)
 
-Teknik detaylarla uğraşmak istemiyor musunuz? Sadece şu adımları izleyin:
+Sadece şu adımları izle ve çalışmaya başla:
 
-1.  **Ollama'yı Başlatın:** Bilgisayarınızda [Ollama](https://ollama.com) uygulamasının çalıştığından emin olun.
-2.  **Dosyaya Tıklayın:** Proje klasöründeki **`BASLAT.bat`** dosyasına çift tıklayın.
-3.  **Hepsi Bu!** Program gerekli kurulumları otomatik yapacak ve arka planda çalışmaya başlayacaktır.
-
-> [!TIP]
-> Programın çalıştığını doğrulamak için herhangi bir metni seçip `F8` tuşuna basmanız yeterlidir.
+1. **Ollama'yı Başlat:** Bilgisayarındaki [Ollama](https://ollama.com) uygulamasının çalıştığından emin ol. (PlanKey tamamen senin bilgisayarındaki yapay zekayı kullanır, internete bile ihtiyaç duymaz!)
+2. **Tek Tıkla Çalıştır:** Klasörün içindeki **`BASLAT.bat`** dosyasına çift tıkla. Siyah bir ekran açılıp kapanacak, korkma! PlanKey şu an arka planda sessizce nöbette. 💂‍♂️
+3. **Sihri Gör:** Çalıştığın PDF'ten, Word'den veya internet sitesinden bir metin seç, klavyenden **`F8`** tuşuna bas. Karşına süper akıllı bir menü çıkacak!
 
 ---
 
-## ✨ Öne Çıkan Özellikler
+## ✨ Neler Yapabiliyor?
 
-PlanKey, öğrenci ihtiyaçlarına yönelik üç ana mod sunar:
+F8'e bastığında karşına çıkacak olan asistanının yetenekleri:
 
-- **📅 Sınav Çalışma Takvimi:** Seçtiğiniz konuyu ve sınav tarihini analiz ederek, Pomodoro tekniğine uygun saatlik bir çalışma programı oluşturur.
-- **⏱️ Günlük Pomodoro Planı:** Yoğun konuları 25dk odaklanma / 5dk mola döngülerine bölerek yönetilebilir görev listeleri hazırlar.
-- **📊 Konu Analizi & Strateji:** İçeriği önem sırasına göre kategorize eder ve çalışma taktikleri verir.
+- **📅 Sınav Çalışma Takvimi Oluştur:** "Sınava 5 gün kaldı, günde 2 saat çalışabilirim" de, o sana gün gün ne çalışman gerektiğini Pomodoro saatlerine kadar planlasın.
+- **⏱️ Günlük Pomodoro Planı Yap:** O gün çalışman gereken yoğun konuları alıp, "25 dakika odaklan, 5 dakika mola ver" şeklinde senin için lokmalara bölsün.
+- **📊 Konu Analizi ve Dağılımı:** Uzun bir konu listesi mi var? Hangisi daha önemli, hangisine öncelik vermelisin senin için analiz etsin ve taktik versin.
+
+Üstelik en güzel yanı: **Sana karmaşık kodlar veya bozuk tablolar göstermez!** Tamamen senin okuyabileceğin sadelikte, çok temiz listeler sunar.
 
 ---
 
-## 🛠️ Teknik Mimari
+## 🛠️ Nasıl Çalışıyor? (Meraklısına Teknik Detay)
 
-PlanKey, düşük sistem kaynağı kullanarak yüksek performanslı yapay zeka yanıtları üretmek için tasarlanmıştır.
+Sistem tamamen senin bilgisayarında, senin kaynaklarınla ve güvenle çalışır. Gelişmiş ama çok hafif olan **Gemma 3 (1B)** yapay zeka modelini kullanır. Yani bilgisayarını yormadan, şimşek hızında cevap verir!
 
 ```mermaid
 graph TD
-    User([Metin Seç & F8]) --> App[PlanKey Arka Plan Servisi]
-    App --> Clipboard[Pyperclip & PyAutogui]
-    Clipboard --> Logic{Model Seçimi}
-    Logic -->|Öncelik| Ollama[Lokal: Gemma-4]
-    Logic -->|Yedek| Gemini[Bulut: Gemini-3 Flash]
-    Ollama --> Display([Sonuç Penceresi])
-    Gemini --> Display
+    Sen([Bir metin seç & F8'e bas]) --> Asistan[PlanKey Arka Plan Servisi]
+    Asistan --> Kopyalama[Sessizce Metni Alır]
+    Kopyalama --> YapayZeka{Akıllı Analiz}
+    YapayZeka -->|Hızlı & Hafif Model| Model[Lokal: Gemma3 1B]
+    Model --> EkranaYansit([Temiz, Düzenli Sonuç Penceresi])
 ```
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Dosyalar Ne İşe Yarıyor?
 
 | Dosya | Görev |
 | :--- | :--- |
-| `main.pyw` | **Ana Motor:** Arka planda sessizce (terminalsiz) çalışır. |
-| `BASLAT.bat` | **Kolay Başlatıcı:** Sanal ortamı kontrol eder ve uygulamayı çalıştırır. |
-| `kurulum.bat` | **Otomatik Kurulum:** Python kütüphanelerini saniyeler içinde kurar. |
-| `requirements.txt` | Gerekli bağımlılıkların listesi. |
+| `main.pyw` | **Asıl Kahraman:** F8'i dinleyen ve her şeyi yöneten sessiz beyin. |
+| `BASLAT.bat` | **Tembel İşi Başlatıcı:** Çift tıkla ve unut. Gereken her şeyi o ayarlar. |
+| `kurulum.bat` | İlk defa kullanıyorsan gereken paketleri indirir. |
 
 ---
 
-## ❓ Sıkça Sorulan Sorular (FAQ)
+## 💡 Sorun Mu Yaşadın?
 
 > [!IMPORTANT]
-> **Hata: "Ollama'ya bağlanılamadı"**
-> Çözüm: Ollama uygulamasının açık olduğundan ve `ollama serve` komutunun çalıştığından emin olun.
+> **Ollama API Hatası / Bağlantı Hatası mı aldın?**
+> Ollama'nın açık olduğundan emin ol. Sağ alt köşede görev çubuğunda simgesini görmelisin.
 
 > [!WARNING]
-> **Hata: "Metin seçimi bulunamadı"**
-> Çözüm: `F8` tuşuna basmadan önce bir metni mouse ile maviye boyadığınızdan (seçtiğinizden) emin olun.
-
-**Soru: İnternet gerekli mi?**
-Cevap: Hayır, Ollama kullandığınız sürece tamamen çevrimdışı (offline) çalışır. Sadece yedek model (Gemini) için internet gerekir.
+> **Menü açılmıyor mu?**
+> F8'e basmadan önce farenle bir yazıyı seçip maviye boyadığından emin ol! Seçili metin yoksa asistan neye yardım edeceğini bilemez. :)
 
 ---
-
-## 👤 Geliştirici
-
-**Beşşar**
-*Introduction to Data Visualization Project Assignment*
-
----
-
-<div align="center">
-
-⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!
-
-</div>
+*İyi çalışmalar! Verimin tavan yapsın! 🚀*

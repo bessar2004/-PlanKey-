@@ -16,10 +16,9 @@ sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # --- AYARLAR ---
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_ADI = "gemma4:31b-cloud"  # Ana model (F8)
+MODEL_ADI = "gemma3:1b"  # Ana model - hızlı, GPU'ya sığıyor
 TEXT_MODEL_CANDIDATES = [
     MODEL_ADI,
-    "gemini-3-flash-preview:latest",  # Yedek model
 ]
 
 KISAYOL_METIN = keyboard.Key.f8  # Metin secimi icin kisayol
@@ -33,10 +32,43 @@ kisayol_basildi = False
 
 # --- MENÜ SEÇENEKLERİ VE PROMPT'LAR ---
 ISLEMLER = {
-    # --- 🗓️ Sınav ve Ders Planlayıcı ---
-    "📅 Sınav Çalışma Takvimi Oluştur": "Sen profesyonel bir eğitim asistanısın. Seçili metinde belirtilen sınav konusunu, sınav tarihini ve adayın günlük ayırabileceği çalışma süresini analiz et. Kalan günlere mantıklı bir şekilde yayılmış, Pomodoro tekniğine uygun (25dk çalışma + 5dk mola) saat saat planlanmış detaylı bir takvim hazırla. UYARI: Kesinlikle Markdown tablosu (| Hücre |) kullanma! Düz metin ekranında bozuk görünüyor. Onun yerine her günü kalın başlıklar, bol dikey boşluklar, oklar (->) ve emojiler kullanarak dikey madde imli bir liste şeklinde aşırı okunaklı ve düzenli olarak tasarla.",
-    "⏱️ Günlük Pomodoro Planı Yap": "Seçili metndeki çalışma konularını veya notlarını analiz et. Bu konuları bugün çalışmak üzere 25 dakikalık odaklanma ve 5 dakikalık mola periyotları (Pomodoro tekniği) şeklinde planla. UYARI: Kesinlikle tablo kullanma! Saat saat programlanmış detaylı bir yapılacaklar listesini (checklist), okunaklı dikey maddeler ve emojilerle hazırla.",
-    "📊 Konu Analizi ve Dağılımı": "Seçili metinde bahsedilen sınav veya ders içeriğini incele. Çalışılması gereken konuları stratejik önemlerine göre kategorize et. Taktikler ver. UYARI: Kesinlikle tablo kullanma! Konuları önem sırasına göre madde işaretleriyle (bullet points) ve rahat okunabilen paragraflar halinde listele."
+    # --- 📅 Sınav ve Ders Planlayıcı ---
+    "📅 Sınav Çalışma Takvimi Oluştur": (
+        "Sen profesyonel bir eğitim asistanısın. Seçili metinde belirtilen sınav konusunu, sınav tarihini ve "
+        "adayın günlük ayırabileceği çalışma süresini analiz et. Kalan günlere mantıklı bir şekilde yayılmış, "
+        "Pomodoro tekniğine uygun (25dk çalışma + 5dk mola) saat saat planlanmış detaylı bir takvim hazırla.\n\n"
+        "KURAL - KESINLIKLE UYMAN GEREKEN FORMAT:\n"
+        "- Yildiz (*) veya (**) KULLANMA\n"
+        "- Markdown tablo (| sutun |) KULLANMA\n"
+        "- # veya ## baslik KULLANMA\n"
+        "- Her gunu buyuk harf ve tire ile ayir, ornek: --- PAZARTESI 12 MAYIS ---\n"
+        "- Maddeleri satir basi tire (-) ile yaz\n"
+        "- Saatleri acık yaz, ornek: 09:00-09:25 Konu: Turk Tarihi\n"
+        "- Her gun arasina bos bir satir birak"
+    ),
+    "⏱️ Günlük Pomodoro Planı Yap": (
+        "Seçili metndeki çalışma konularını veya notları analiz et. Bu konuları bugün çalışmak üzere "
+        "25 dakikalık odaklanma ve 5 dakikalık mola periyotları (Pomodoro tekniği) şeklinde planla.\n\n"
+        "KURAL - KESINLIKLE UYMAN GEREKEN FORMAT:\n"
+        "- Yildiz (*) veya (**) KULLANMA\n"
+        "- Markdown tablo (| sutun |) KULLANMA\n"
+        "- # veya ## baslik KULLANMA\n"
+        "- Saatleri acık yaz, ornek: 09:00-09:25 >> Konu Adı\n"
+        "- Mola satirlarini acık yaz, ornek: 09:25-09:30 >> MOLA\n"
+        "- Her pomodoro arasına bos satir birak\n"
+        "- En sona toplam pomodoro sayisini yaz"
+    ),
+    "📊 Konu Analizi ve Dağılımı": (
+        "Seçili metinde bahsedilen sınav veya ders içeriğini incele. Çalışılması gereken konuları "
+        "stratejik önemlerine göre kategorize et. Taktikler ver.\n\n"
+        "KURAL - KESINLIKLE UYMAN GEREKEN FORMAT:\n"
+        "- Yildiz (*) veya (**) KULLANMA\n"
+        "- Markdown tablo (| sutun |) KULLANMA\n"
+        "- # veya ## baslik KULLANMA\n"
+        "- Kategorileri buyuk harf ve tire ile ayir, ornek: === ONCELIKLI KONULAR ===\n"
+        "- Maddeleri satir basi tire (-) veya numara ile yaz\n"
+        "- Her kategori arasina bos satir birak"
+    ),
 }
 
 
@@ -73,7 +105,7 @@ def get_available_text_model():
 def ollama_cevap_al(prompt):
     """Ollama API'den cevap al."""
     try:
-        aktif_model = get_available_text_model()
+        aktif_model = MODEL_ADI  # Direkt ana modeli kullan
         payload = {
             "model": aktif_model,
             "prompt": prompt,
@@ -84,7 +116,7 @@ def ollama_cevap_al(prompt):
             },
         }
 
-        response = requests.post(OLLAMA_URL, json=payload, timeout=300)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
 
         if response.status_code == 200:
             result = response.json()
@@ -126,6 +158,33 @@ def strip_code_fence(text):
             lines = lines[:-1]
         cleaned = "\n".join(lines).strip()
     return cleaned
+
+
+def markdown_temizle(text):
+    """Markdown sembollerini temiz okunabilir metne dönüştürür."""
+    if not text:
+        return text
+    import re
+    satirlar = text.splitlines()
+    temiz = []
+    for satir in satirlar:
+        # Tablo satirlarini atla
+        if re.match(r'^\s*\|', satir) or re.match(r'^\s*[-|]+\s*$', satir):
+            continue
+        # ## Basliklar -> buyuk harf
+        satir = re.sub(r'^#{1,6}\s+', '', satir)
+        # **kalin** -> normal
+        satir = re.sub(r'\*{1,3}([^*]+)\*{1,3}', r'\1', satir)
+        # __kalin__ -> normal
+        satir = re.sub(r'_{1,2}([^_]+)_{1,2}', r'\1', satir)
+        # `kod` -> normal
+        satir = re.sub(r'`([^`]*)`', r'\1', satir)
+        # > alcinti
+        satir = re.sub(r'^\s*>+\s?', '', satir)
+        temiz.append(satir)
+    # Uc veya daha fazla bos satiri ikiye indir
+    sonuc = re.sub(r'\n{3,}', '\n\n', '\n'.join(temiz))
+    return sonuc.strip()
 
 
 def secili_metni_kopyala(max_deneme=4):
@@ -233,6 +292,7 @@ def islemi_yap(komut_adi, secili_metin):
         return
 
     sonuc = strip_code_fence(sonuc)
+    sonuc = markdown_temizle(sonuc)
     if sonuc.startswith("'") and sonuc.endswith("'"):
         sonuc = sonuc[1:-1]
 

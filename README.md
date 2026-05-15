@@ -18,22 +18,6 @@ PlanKey; herhangi bir uygulamada seçtiğin metni anında alıp yerel Ollama mod
 
 ---
 
-## İçindekiler
-
-- [Nedir?](#nedir)
-- [Özellikler](#özellikler)
-- [Nasıl Çalışır?](#nasıl-çalışır)
-- [Gereksinimler](#gereksinimler)
-- [Kurulum](#kurulum)
-- [Kullanım](#kullanım)
-- [Kısayollar](#kısayollar)
-- [AI İşlemleri](#ai-işlemleri)
-- [Proje Yapısı](#proje-yapısı)
-- [Sorun Giderme](#sorun-giderme)
-- [Lisans](#lisans)
-
----
-
 ## Nedir?
 
 PlanKey, **arka planda sessizce çalışan** bir yapay zeka asistanıdır. Herhangi bir uygulama açıkken — PDF okurken, tarayıcıda gezinirken, Word belgesi düzenlerken — bir metin seçip **F8** tuşuna basman yeterli. PlanKey o metni alır, yerel Ollama modeline gönderir ve sana anında:

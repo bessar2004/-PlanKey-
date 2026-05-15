@@ -1,4 +1,5 @@
 import sys
+import re
 import pyperclip
 from pynput import keyboard, mouse
 import tkinter as tk
@@ -223,7 +224,6 @@ def markdown_temizle(text):
     """Markdown sembollerini temiz okunabilir metne dönüştürür."""
     if not text:
         return text
-    import re
     satirlar = text.splitlines()
     temiz = []
     for satir in satirlar:
@@ -263,7 +263,7 @@ def secili_metni_kopyala(max_deneme=4):
         pass
 
     for _ in range(max_deneme):
-        klavye_kisayolu(keyboard.Key.ctrl_l, "c")
+        klavye_kisayolu(keyboard.Key.ctrl, "c")
         time.sleep(0.2)
         metin = pyperclip.paste()
         if metin and metin.strip() and metin != sentinel:
@@ -295,6 +295,7 @@ def sonuc_penceresi_goster(baslik, icerik):
     pencere.geometry("780x520")
     pencere.minsize(520, 320)
     pencere.attributes("-topmost", True)
+    pencere.protocol("WM_DELETE_WINDOW", pencere.destroy)
 
     frame = tk.Frame(pencere, bg="#1f1f1f")
     frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -379,7 +380,7 @@ def islemi_yap(komut_adi, secili_metin):
     time.sleep(0.2)
     pyperclip.copy(sonuc)
     time.sleep(0.1)
-    klavye_kisayolu(keyboard.Key.ctrl_l, "v")
+    klavye_kisayolu(keyboard.Key.ctrl, "v")
     log_yaz("✅ İşlem tamamlandı!")
 
 
@@ -396,6 +397,8 @@ def process_queue():
                 func(*args)
             except Exception as e:
                 log_yaz(f"GUI işlemi çalıştırılamadı: {e}")
+            finally:
+                gui_queue.task_done()
     finally:
         if root:
             root.after(100, process_queue)
@@ -480,6 +483,7 @@ def uygulamayi_kapat():
         listener = None
     if root:
         root.quit()
+        root.destroy()
 
 
 def cikis_onayi_goster():

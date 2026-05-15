@@ -48,13 +48,16 @@ hazırlar. Tüm bunları **verilerini internete göndermeden**, tamamen bilgisay
 ## Nasıl Çalışır?
 
 ```mermaid
-flowchart LR
-    A["Herhangi Bir Uygulamada\nMetin Sec"] -->|F8'e Bas| B["PlanKey\nArka Plan"]
-    B --> C["Secili Metni\nPanoya Al"]
-    C --> D["Ollama\nYerel API\nlocalhost:11434"]
-    D --> E["gemma3:1b\nModel"]
-    E --> F["Sonuc\nPenceresi"]
-    F --> G["Panoya Kopyala\nveya Kapat"]
+flowchart TD
+    A["Herhangi bir uygulamada metin sec"]
+    B["F8 tusuna bas"]
+    C["PlanKey secili metni panoya alir"]
+    D["Ollama yerel API - localhost:11434"]
+    E["gemma3:1b modeli isleme alir"]
+    F["Sonuc temizlenir ve pencerede gosterilir"]
+    G["Panoya kopyala veya kapat"]
+
+    A --> B --> C --> D --> E --> F --> G
 ```
 
 1. **PlanKey arka planda çalışır** — görev çubuğunda görünmez, F8/F9 dinler

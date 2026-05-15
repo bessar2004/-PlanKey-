@@ -1,17 +1,49 @@
 import sys
 import pyperclip
-from pynput import keyboard
-import pyautogui
+from pynput import keyboard, mouse
 import tkinter as tk
 from tkinter import messagebox
 import time
 import threading
 import requests
 import queue
+from pathlib import Path
 
-# Terminal encoding düzeltmesi (emoji ve Türkçe karakter desteği)
-sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+LOG_DOSYASI = Path(__file__).with_name("plankey.log")
+
+
+def konsol_encoding_ayarla():
+    """Terminal varsa UTF-8'e al; pythonw.exe altında sessizce geç."""
+    for stream_adi in ("stdout", "stderr"):
+        stream = getattr(sys, stream_adi, None)
+        if stream and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
+def log_yaz(*parcalar):
+    """Konsol yokken de hata ayıklama için log dosyasına yaz."""
+    mesaj = " ".join(str(parca) for parca in parcalar)
+    stream = getattr(sys, "stdout", None)
+
+    if stream:
+        try:
+            print(mesaj, file=stream, flush=True)
+        except Exception:
+            pass
+
+    try:
+        zaman = time.strftime("%Y-%m-%d %H:%M:%S")
+        with LOG_DOSYASI.open("a", encoding="utf-8") as log:
+            log.write(f"[{zaman}] {mesaj}\n")
+    except Exception:
+        pass
+
+
+konsol_encoding_ayarla()
 
 
 # --- AYARLAR ---
@@ -22,12 +54,32 @@ TEXT_MODEL_CANDIDATES = [
 ]
 
 KISAYOL_METIN = keyboard.Key.f8  # Metin secimi icin kisayol
+KISAYOL_CIKIS = keyboard.Key.f9  # Programi kapatmak icin kisayol
 
 
 # Global değişkenler
 root = None
 gui_queue = queue.Queue()
 kisayol_basildi = False
+cikis_kisayolu_basildi = False
+listener = None
+klavye_kontrol = keyboard.Controller()
+fare_kontrol = mouse.Controller()
+
+
+def klavye_kisayolu(*tuslar):
+    """Pynput ile güvenilir klavye kısayolu gönderir."""
+    try:
+        for tus in tuslar:
+            klavye_kontrol.press(tus)
+            time.sleep(0.02)
+        for tus in reversed(tuslar):
+            klavye_kontrol.release(tus)
+            time.sleep(0.02)
+        return True
+    except Exception as e:
+        log_yaz(f"Klavye kısayolu gönderilemedi: {e}")
+        return False
 
 
 # --- MENÜ SEÇENEKLERİ VE PROMPT'LAR ---
@@ -43,18 +95,18 @@ ISLEMLER = {
         "- # veya ## baslik KULLANMA\n"
         "- Her gunu buyuk harf ve tire ile ayir, ornek: --- PAZARTESI 12 MAYIS ---\n"
         "- Maddeleri satir basi tire (-) ile yaz\n"
-        "- Saatleri acık yaz, ornek: 09:00-09:25 Konu: Turk Tarihi\n"
+        "- Saatleri açık yaz, ornek: 09:00-09:25 Konu: Turk Tarihi\n"
         "- Her gun arasina bos bir satir birak"
     ),
     "⏱️ Günlük Pomodoro Planı Yap": (
-        "Seçili metndeki çalışma konularını veya notları analiz et. Bu konuları bugün çalışmak üzere "
+        "Seçili metindeki çalışma konularını veya notları analiz et. Bu konuları bugün çalışmak üzere "
         "25 dakikalık odaklanma ve 5 dakikalık mola periyotları (Pomodoro tekniği) şeklinde planla.\n\n"
         "KURAL - KESINLIKLE UYMAN GEREKEN FORMAT:\n"
         "- Yildiz (*) veya (**) KULLANMA\n"
         "- Markdown tablo (| sutun |) KULLANMA\n"
         "- # veya ## baslik KULLANMA\n"
-        "- Saatleri acık yaz, ornek: 09:00-09:25 >> Konu Adı\n"
-        "- Mola satirlarini acık yaz, ornek: 09:25-09:30 >> MOLA\n"
+        "- Saatleri açık yaz, ornek: 09:00-09:25 >> Konu Adı\n"
+        "- Mola satirlarini açık yaz, ornek: 09:25-09:30 >> MOLA\n"
         "- Her pomodoro arasına bos satir birak\n"
         "- En sona toplam pomodoro sayisini yaz"
     ),
@@ -105,7 +157,7 @@ def get_available_text_model():
 def ollama_cevap_al(prompt):
     """Ollama API'den cevap al."""
     try:
-        aktif_model = MODEL_ADI  # Direkt ana modeli kullan
+        aktif_model = get_available_text_model()
         payload = {
             "model": aktif_model,
             "prompt": prompt,
@@ -125,9 +177,11 @@ def ollama_cevap_al(prompt):
         err_msg = (
             f"Ollama API Hatası: {response.status_code}\n"
             f"Model: {aktif_model}\n"
-            f"Cevap: {response.text}"
+            f"Cevap: {response.text}\n\n"
+            f"Model yüklü değilse şu komutu çalıştırın:\n"
+            f"ollama pull {MODEL_ADI}"
         )
-        print(f"❌ {err_msg}")
+        log_yaz(f"❌ {err_msg}")
         gui_queue.put((messagebox.showerror, ("API Hatası", err_msg)))
         return None
 
@@ -137,12 +191,17 @@ def ollama_cevap_al(prompt):
             "Programın çalıştığından emin olun!\n"
             "(http://localhost:11434)"
         )
-        print(f"❌ {err_msg}")
+        log_yaz(f"❌ {err_msg}")
         gui_queue.put((messagebox.showerror, ("Bağlantı Hatası", err_msg)))
+        return None
+    except requests.exceptions.Timeout:
+        err_msg = "Ollama zaman aşımına uğradı. Model meşgul olabilir; biraz sonra tekrar deneyin."
+        log_yaz(f"❌ {err_msg}")
+        gui_queue.put((messagebox.showerror, ("Zaman Aşımı", err_msg)))
         return None
     except Exception as e:
         err_msg = f"Beklenmeyen Hata: {e}"
-        print(f"❌ {err_msg}")
+        log_yaz(f"❌ {err_msg}")
         gui_queue.put((messagebox.showerror, ("Hata", err_msg)))
         return None
 
@@ -189,17 +248,33 @@ def markdown_temizle(text):
 
 def secili_metni_kopyala(max_deneme=4):
     sentinel = f"__AI_ASISTAN__{time.time_ns()}__"
+    onceki_pano = None
+    pano_okunabildi = False
+
+    try:
+        onceki_pano = pyperclip.paste()
+        pano_okunabildi = True
+    except Exception:
+        pass
+
     try:
         pyperclip.copy(sentinel)
     except Exception:
         pass
 
     for _ in range(max_deneme):
-        pyautogui.hotkey("ctrl", "c")
+        klavye_kisayolu(keyboard.Key.ctrl_l, "c")
         time.sleep(0.2)
         metin = pyperclip.paste()
         if metin and metin.strip() and metin != sentinel:
             return metin
+
+    if pano_okunabildi:
+        try:
+            pyperclip.copy(onceki_pano)
+        except Exception:
+            pass
+
     return ""
 
 
@@ -283,12 +358,12 @@ def islemi_yap(komut_adi, secili_metin):
     prompt_emri = ISLEMLER[komut_adi]
     full_prompt = f"{prompt_emri}:\n\n'{secili_metin}'"
 
-    print(f"🤖 İşlem: {komut_adi}")
-    print("⏳ Ollama ile işleniyor...")
+    log_yaz(f"🤖 İşlem: {komut_adi}")
+    log_yaz("⏳ Ollama ile işleniyor...")
 
     sonuc = ollama_cevap_al(full_prompt)
     if not sonuc:
-        print("❌ Sonuç alınamadı.")
+        log_yaz("❌ Sonuç alınamadı.")
         return
 
     sonuc = strip_code_fence(sonuc)
@@ -298,14 +373,14 @@ def islemi_yap(komut_adi, secili_metin):
 
     if pencere_modunda_gosterilsin_mi(komut_adi):
         gui_queue.put((sonuc_penceresi_goster, (komut_adi, sonuc)))
-        print("✅ Sonuç ayrı pencerede gösterildi.")
+        log_yaz("✅ Sonuç ayrı pencerede gösterildi.")
         return
 
     time.sleep(0.2)
     pyperclip.copy(sonuc)
     time.sleep(0.1)
-    pyautogui.hotkey("ctrl", "v")
-    print("✅ İşlem tamamlandı!")
+    klavye_kisayolu(keyboard.Key.ctrl_l, "v")
+    log_yaz("✅ İşlem tamamlandı!")
 
 
 def process_queue():
@@ -317,7 +392,10 @@ def process_queue():
             except queue.Empty:
                 break
             func, args = task
-            func(*args)
+            try:
+                func(*args)
+            except Exception as e:
+                log_yaz(f"GUI işlemi çalıştırılamadı: {e}")
     finally:
         if root:
             root.after(100, process_queue)
@@ -331,8 +409,8 @@ def menu_goster():
             (
                 messagebox.showwarning,
                 (
-                    "Secim Bulunamadi",
-                    "Lutfen once metin secin, sonra F8 ile menuyu acin.",
+                    "Seçim Bulunamadı",
+                    "Lütfen önce metin seçin, sonra F8 ile menüyü açın.",
                 ),
             )
         )
@@ -360,60 +438,91 @@ def menu_goster():
         menu.add_command(label=baslik, command=komut_olustur(baslik, secili_metin))
 
     menu.add_separator()
+    menu.add_command(label="PlanKey'i Kapat (F9)", command=cikis_onayi_goster)
     menu.add_command(label="❌ İptal", command=lambda: None)
 
     try:
-        x, y = pyautogui.position()
+        x, y = fare_kontrol.position
         menu.tk_popup(x, y)
     finally:
         menu.grab_release()
 
 
 def on_press(key):
-    global kisayol_basildi
+    global kisayol_basildi, cikis_kisayolu_basildi
     try:
         if key == KISAYOL_METIN and not kisayol_basildi:
             kisayol_basildi = True
             gui_queue.put((menu_goster, ()))
+        elif key == KISAYOL_CIKIS and not cikis_kisayolu_basildi:
+            cikis_kisayolu_basildi = True
+            gui_queue.put((cikis_onayi_goster, ()))
     except AttributeError:
         pass
 
 
 def on_release(key):
-    global kisayol_basildi
+    global kisayol_basildi, cikis_kisayolu_basildi
     try:
         if key == KISAYOL_METIN:
             kisayol_basildi = False
+        elif key == KISAYOL_CIKIS:
+            cikis_kisayolu_basildi = False
     except AttributeError:
         pass
 
 
+def uygulamayi_kapat():
+    global listener
+    log_yaz("PlanKey kapatılıyor...")
+    if listener:
+        listener.stop()
+        listener = None
+    if root:
+        root.quit()
+
+
+def cikis_onayi_goster():
+    if messagebox.askyesno("PlanKey", "PlanKey kapatılsın mı?"):
+        uygulamayi_kapat()
+
+
 if __name__ == "__main__":
-    print("=" * 60)
-    print("🤖 AI Asistan - Metin İşleme")
-    print("=" * 60)
+    log_yaz("=" * 60)
+    log_yaz("🤖 PlanKey - Metin İşleme")
+    log_yaz("=" * 60)
     aktif_text_model = get_available_text_model()
-    print(f"📦 Metin İşleme (F8): {aktif_text_model}")
-    print()
-    print("🔧 Kullanım:")
-    print("   F8 - Metin sec ve AI islemleri yap")
-    print()
-    print("⚠️ Programı kapatmak için bu pencereyi kapatın veya Ctrl+C yapın.")
-    print("=" * 60)
+    log_yaz(f"📦 Metin İşleme (F8): {aktif_text_model}")
+    log_yaz()
+    log_yaz("🔧 Kullanım:")
+    log_yaz("   F8 - Metin seç ve AI işlemleri yap")
+    log_yaz("   F9 - PlanKey'i kapat")
+    log_yaz()
+    log_yaz("⚠️ Programı F9 ile kapatabilirsiniz.")
+    log_yaz("=" * 60)
 
     try:
         test_response = requests.get("http://localhost:11434/api/tags", timeout=5)
         if test_response.status_code == 200:
-            print("✅ Ollama bağlantısı başarılı!")
+            log_yaz("✅ Ollama bağlantısı başarılı!")
         else:
-            print("⚠️ Ollama'ya bağlanılamadı, servisi kontrol edin!")
+            log_yaz("⚠️ Ollama'ya bağlanılamadı, servisi kontrol edin!")
     except Exception:
-        print("⚠️ Ollama çalışmıyor olabilir! 'ollama serve' ile başlatın.")
+        log_yaz("⚠️ Ollama çalışmıyor olabilir! 'ollama serve' ile başlatın.")
 
-    print()
+    log_yaz()
 
-    listener = keyboard.Listener(on_press=on_press, on_release=on_release)
-    listener.start()
+    try:
+        listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+        listener.start()
+    except Exception as e:
+        log_yaz(f"Klavye dinleyicisi başlatılamadı: {e}")
+        messagebox.showerror(
+            "PlanKey",
+            "Klavye dinleyicisi başlatılamadı.\n"
+            "Programı yönetici olarak çalıştırmayı deneyin veya güvenlik izinlerini kontrol edin.",
+        )
+        raise
 
     root = tk.Tk()
     root.withdraw()
@@ -422,4 +531,4 @@ if __name__ == "__main__":
     try:
         root.mainloop()
     except KeyboardInterrupt:
-        print("Kapatılıyor...")
+        log_yaz("Kapatılıyor...")

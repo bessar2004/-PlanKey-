@@ -1,66 +1,130 @@
-# ⚡ PlanKey: Senin Kişisel Yapay Zeka Çalışma Asistanın!
+# ⚡ PlanKey
 
-Selam! 👋 Ders çalışırken plan yapmak, konuları bölmek ve neye ne kadar süre ayıracağını düşünmek seni de yoruyor mu? İşte **PlanKey** tam da bunun için var! 
-
-Sen ders notunu, sınav konularını veya herhangi bir metni okurken **sadece metni seçip F8 tuşuna basarsın**, PlanKey anında devreye girer ve o metni senin için analiz edip harika bir çalışma planına dönüştürür. Üstelik her şeyi arka planda, seni hiç rahatsız etmeden yapar.
+PlanKey, seçtiğin metni **F8** kısayoluyla alıp yerel Ollama modeliyle çalışma planına dönüştüren küçük bir Windows masaüstü asistanıdır. İnternet API'si kullanmaz; metinler bilgisayarındaki Ollama servisine gönderilir.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Ollama](https://img.shields.io/badge/Ollama-Local%20LLM-white?style=for-the-badge&logo=ollama&logoColor=black)
 
 ---
 
-## 🚀 Nasıl Kullanılır? (Çok Basit!)
+## Özellikler
 
-Sadece şu adımları izle ve çalışmaya başla:
-
-1. **Ollama'yı Başlat:** Bilgisayarındaki Ollama uygulamasının çalıştığından emin ol. (PlanKey tamamen senin bilgisayarındaki yapay zekayı kullanır, internete bile ihtiyaç duymaz!)
-2. **Tek Tıkla Çalıştır:** Klasörün içindeki **`BASLAT.bat`** dosyasına çift tıkla. Siyah bir ekran açılıp kapanacak, korkma! PlanKey şu an arka planda sessizce nöbette. 💂‍♂️
-3. **Sihri Gör:** Çalıştığın PDF'ten, Word'den veya internet sitesinden bir metin seç, klavyenden **`F8`** tuşuna bas. Karşına süper akıllı bir menü çıkacak!
-
----
-
-## ✨ Neler Yapabiliyor?
-
-F8'e bastığında karşına çıkacak olan asistanının yetenekleri:
-
-- **📅 Sınav Çalışma Takvimi Oluştur:** Sınava 5 gün kaldı, günde 2 saat çalışabilirim de, o sana gün gün ne çalışman gerektiğini planlasın.
-- **⏱️ Günlük Pomodoro Planı Yap:** O gün çalışman gereken yoğun konuları alıp, 25 dakika odaklan, 5 dakika mola ver şeklinde senin için lokmalara bölsün.
-- **📊 Konu Analizi ve Dağılımı:** Uzun bir konu listesi mi var? Hangisi daha önemli, hangisine öncelik vermelisin senin için analiz etsin ve taktik versin.
-
-Üstelik en güzel yanı: **Sana karmaşık kodlar veya bozuk tablolar göstermez!** Tamamen senin okuyabileceğin sadelikte, çok temiz listeler sunar.
+- **Sınav Çalışma Takvimi:** Konuları günlere ve saatlere böler.
+- **Günlük Pomodoro Planı:** Seçili metni 25 dakika çalışma + 5 dakika mola düzenine çevirir.
+- **Konu Analizi:** Konuları öncelik ve çalışma stratejisine göre sınıflandırır.
+- **Yerel çalışma:** Varsayılan model `gemma3:1b` ve Ollama'nın yerel API'sidir.
 
 ---
 
-## 🛠️ Nasıl Çalışıyor? (Meraklısına Teknik Detay)
+## Gereksinimler
 
-Sistem tamamen senin bilgisayarında, senin kaynaklarınla ve güvenle çalışır. Gelişmiş ama çok hafif olan **Gemma 3 (1B)** yapay zeka modelini kullanır. Yani bilgisayarını yormadan, şimşek hızında cevap verir!
+- Windows 10/11
+- Python 3.8 veya üzeri (`python.org` sürümü önerilir)
+- Ollama
+- Ollama modeli: `gemma3:1b`
 
-```mermaid
-graph TD
-    Sen["Metin Seç ve F8 Bas"] --> Asistan["PlanKey Arka Plan Servisi"]
-    Asistan --> Kopyalama["Sessizce Metni Alır"]
-    Kopyalama --> YapayZeka{"Akıllı Analiz"}
-    YapayZeka --> Model["Lokal: Gemma3 1B"]
-    Model --> EkranaYansit["Temiz Düzenli Sonuç Penceresi"]
+Ollama kurulu değilse önce indirip kur:
+
+```bat
+https://ollama.com/download
+```
+
+Modeli indirmek için:
+
+```bat
+ollama pull gemma3:1b
 ```
 
 ---
 
-## 📁 Dosyalar Ne İşe Yarıyor?
+## Kurulum
 
-- **`main.pyw`**: Asıl Kahraman. F8'i dinleyen ve her şeyi yöneten sessiz beyin.
-- **`BASLAT.bat`**: Tembel İşi Başlatıcı. Çift tıkla ve unut. Gereken her şeyi o ayarlar.
-- **`kurulum.bat`**: İlk defa kullanıyorsan gereken paketleri indirir.
+İlk kullanımda klasördeki dosyaları şu sırayla çalıştır:
+
+1. `kurulum.bat`
+2. `BASLAT.bat`
+
+`kurulum.bat` şunları yapar:
+
+- Python sürümünü kontrol eder.
+- `.venv` sanal ortamını oluşturur.
+- Bozuk `.venv` varsa yeniden oluşturur.
+- Hem klasik Windows `Scripts` hem de MSYS/POSIX tarzı `bin` sanal ortamlarını tanır.
+- Gerekli Python paketlerini kurar.
+- Ollama ve `gemma3:1b` modeli için uyarı verir.
+
+Sonraki kullanımlarda sadece `BASLAT.bat` dosyasına çift tıklaman yeterli.
 
 ---
 
-## 💡 Sorun Mu Yaşadın?
+## Kullanım
 
-**Ollama API Hatası / Bağlantı Hatası mı aldın?**
-Ollama'nın açık olduğundan emin ol. Sağ alt köşede görev çubuğunda simgesini görmelisin.
+1. Ollama'nın çalıştığından emin ol.
+2. `BASLAT.bat` dosyasını çalıştır.
+3. PDF, Word, tarayıcı veya başka bir uygulamada metin seç.
+4. **F8** tuşuna bas.
+5. Açılan menüden yapmak istediğin işlemi seç.
 
-**Menü açılmıyor mu?**
-F8'e basmadan önce farenle bir yazıyı seçip maviye boyadığından emin ol! Seçili metin yoksa asistan neye yardım edeceğini bilemez. :)
+Kapatmak için **F9** tuşuna basabilir veya F8 menüsündeki **PlanKey'i Kapat** seçeneğini kullanabilirsin.
 
 ---
-*İyi çalışmalar! Verimin tavan yapsın! 🚀*
+
+## Dosyalar
+
+- `main.pyw`: PlanKey uygulamasının ana kodu.
+- `BASLAT.bat`: Uygulamayı başlatır; eksik/bozuk ortamı fark ederse kurulumu çağırır.
+- `kurulum.bat`: Sanal ortamı ve paketleri kurar veya onarır.
+- `requirements.txt`: Python paket listesi.
+- `plankey.log`: Arka planda çalışma sırasında oluşan log dosyası. Hata ayıklamak için kullanılır.
+
+---
+
+## Sorun Giderme
+
+**F8 menüsü açılmıyor**
+
+- Önce gerçekten metin seçtiğinden emin ol.
+- Bazı uygulamalar global kısayolları engelleyebilir; başka bir uygulamada dene.
+- Güvenlik yazılımı klavye dinlemeyi engelliyorsa PlanKey'i yönetici olarak çalıştırmayı deneyebilirsin.
+
+**Ollama bağlantı hatası**
+
+- Ollama uygulamasını aç.
+- Gerekirse terminalde şu komutu çalıştır:
+
+```bat
+ollama serve
+```
+
+**Model bulunamadı hatası**
+
+Şunu çalıştır:
+
+```bat
+ollama pull gemma3:1b
+```
+
+**Program açılmıyor veya hemen kapanıyor**
+
+- `kurulum.bat` dosyasını tekrar çalıştır.
+- `.venv` bozulduysa kurulum betiği otomatik onarmaya çalışır.
+- Detay için `plankey.log` dosyasına bak.
+
+---
+
+## Teknik Akış
+
+```mermaid
+graph TD
+    Sen["Metin Seç ve F8'e Bas"] --> PlanKey["PlanKey Arka Plan Uygulaması"]
+    PlanKey --> Kopyalama["Seçili Metni Panoya Alır"]
+    Kopyalama --> Ollama["Ollama Yerel API"]
+    Ollama --> Model["gemma3:1b"]
+    Model --> Sonuc["Sonuç Penceresi"]
+```
+
+---
+
+## Lisans
+
+Bu proje `LICENSE` dosyasındaki lisansla dağıtılır.
